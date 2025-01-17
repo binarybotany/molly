@@ -23,6 +23,12 @@ void framebuffer_controller::startup(framebuffer_t &framebuffer) {
   glUniform2f(
       glGetUniformLocation(framebuffer.program.id, "viewport_resolution"),
       1920.0f, 1080.0f);
+
+  for (uint32_t y = 0; y < framebuffer.height; ++y) {
+    for (uint32_t x = 0; x < framebuffer.width; ++x) {
+      framebuffer_controller::set_pixel(framebuffer, {x, y}, mode13h[0x00]);
+    }
+  }
 }
 
 void framebuffer_controller::shutdown(framebuffer_t &framebuffer) {}
@@ -38,26 +44,7 @@ void framebuffer_controller::set_pixel(framebuffer_t &framebuffer,
   framebuffer.buffer[index + 2] = color.b;
 }
 
-void test_render(framebuffer_t &framebuffer) {
-  int32_t index = 0;
-  for (uint32_t y = 0; y < framebuffer.height; ++y) {
-    for (uint32_t x = 0; x < framebuffer.width; ++x) {
-      position_t position = {x, y};
-      if (y % 50 == 0)
-        index = 0xF;
-      else if (x % 50 == 0)
-        index = 0x2;
-      else
-        index = 0x0;
-
-      color_t color = mode13h[index];
-      framebuffer_controller::set_pixel(framebuffer, position, color);
-    }
-  }
-}
-
 void framebuffer_controller::update(framebuffer_t &framebuffer) {
-  test_render(framebuffer);
   texture_controller::update(framebuffer.texture, framebuffer.buffer);
 }
 
