@@ -2,6 +2,10 @@
 
 #include <stdexcept>
 
+void on_resize(GLFWwindow *window, int width, int height) {
+  glViewport(0, 0, width, height);
+}
+
 void window_controller::create(window_t &window) {
   if (!glfwInit()) {
     throw std::runtime_error("Unable to intitialize GLFW");
@@ -19,6 +23,12 @@ void window_controller::create(window_t &window) {
 
   window.glfw_window = glfw_window;
   glfwMakeContextCurrent(window.glfw_window);
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    throw std::runtime_error("Unable to load OpenGL 3.3 context");
+  }
+
+  glfwSetFramebufferSizeCallback(window.glfw_window, on_resize);
 }
 
 void window_controller::destroy(window_t &window) {
@@ -29,63 +39,31 @@ void window_controller::destroy(window_t &window) {
   glfwTerminate();
 }
 
-unsigned int texture;
-
-void setup_texture() {
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-  const int tex_width = 256;
-  const int tex_height = 256;
-  unsigned char *pixels = (unsigned char *)malloc(tex_width * tex_height * 3);
-  for (int y = 0; y < tex_height; ++y) {
-    for (int x = 0; x < tex_width; ++x) {
-      int index = (y * tex_width + x) * 3;
-      pixels[index + 0] = (unsigned char)x;
-      pixels[index + 1] = (unsigned char)y;
-      pixels[index + 2] = 128;
-    }
-  }
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, pixels);
-
-  free(pixels);
-}
-
-void display() {
-  glClear(GL_COLOR_BUFFER_BIT);
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, texture);
-
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.0f, 0.0f);
-  glVertex2f(-1.0f, -1.0f);  // Bottom-left
-
-  glTexCoord2f(1.0f, 0.0f);
-  glVertex2f(1.0f, -1.0f);  // Bottom-right
-
-  glTexCoord2f(1.0f, 1.0f);
-  glVertex2f(1.0f, 1.0f);  // Top-right
-
-  glTexCoord2f(0.0f, 1.0f);
-  glVertex2f(-1.0f, 1.0f);  // Top-left
-  glEnd();
-}
-
 void window_controller::startup(window_t &window) {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-  setup_texture();
+  frame_buffer_controller::start_up(window.frame_buffer);
+
   while (!glfwWindowShouldClose(window.glfw_window)) {
     glfwPollEvents();
-    display();
+    glClear(GL_COLOR_BUFFER_BIT);
+    int32_t index = 0;
+    for (uint32_t y = 0; y < window.frame_buffer.height; ++y) {
+      for (uint32_t x = 0; x < window.frame_buffer.width; ++x) {
+        position_t position = {x, y};
+        if (index > 256) index = 0;
+        color_t color = mode13h[index++];
+        frame_buffer_controller::set_pixel(window.frame_buffer, position,
+                                           color);
+      }
+    }
+
+    frame_buffer_controller::update(window.frame_buffer);
+    frame_buffer_controller::render(window.frame_buffer);
+
     glfwSwapBuffers(window.glfw_window);
   }
+
+  frame_buffer_controller::shut_down(window.frame_buffer);
 }
 
 void window_controller::shutdown(window_t &window) {}

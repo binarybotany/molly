@@ -4,7 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/extern/glfw/include"
+                "${workspaceFolder}/extern/glfw/include",
+                "${workspaceFolder}/extern/glad/include"
             ],
             "defines": [
                 "_DEBUG",

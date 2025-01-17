@@ -12,5 +12,6 @@ set(GLFW_BUILD_DOCS OFF)
 set(GLFW_INSTALL OFF)
 
 add_subdirectory(extern/glfw)
+add_subdirectory(extern/glad)
 
 add_subdirectory(src bin)
