@@ -1,17 +1,12 @@
-#include <iostream>
-
-#include "window.h"
+#include "engine.h"
 
 int main(int argc, char **argv) {
-  window_t window;
-  window.width = 1280;
-  window.height = 800;
-  window.title = "Molly";
-
-  window_controller::create(window);
-  window_controller::startup(window);
-  window_controller::shutdown(window);
-  window_controller::destroy(window);
+  engine_t engine;
+  engine_controller::init(engine);
+  engine_controller::startup(engine);
+  engine_controller::mainloop(engine);
+  engine_controller::shutdown(engine);
+  engine_controller::deinit(engine);
 
   return 0;
 }
